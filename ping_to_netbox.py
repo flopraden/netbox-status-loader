@@ -68,8 +68,8 @@ def threadedPingReverseSave(addr):
     ip = (addr['address'].split("/"))[0]
     #Run ping twice - first to ensure ARP completes before second ping goes through
     #this is often visible in labs where the first ping to a newly online device will fail
-    ping.do_one(ip, timeout)
-    rtt = ping.do_one(ip, timeout)
+    ping.do_one(ip, timeout, 64)
+    rtt = ping.do_one(ip, timeout, 64)
     #Create the appropriate search string for a PTR record by reversing the IP space and
     #adding in-addr.arpa to the query
     dnsreq = '.'.join(reversed(ip.split("."))) + ".in-addr.arpa"
