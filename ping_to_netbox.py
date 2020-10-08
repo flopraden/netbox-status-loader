@@ -266,5 +266,9 @@ if __name__ == '__main__':
 #    print r.status_code
 #    print r.json()
     finish = datetime.datetime.now()
-    if __debug__:
-        print("Completed in: " + str(finish - start))
+    print("Completed in: " + str(finish - start))
+    pingable = list(filter(lambda x: x['status'] == 1, result))
+    unpingable = list(filter(lambda x: x['status'] == 2, result))
+    print("UP IPs: " + str(len(pingable)))
+    print("DOWN IPs: " + str(len(unpingable)))
+
