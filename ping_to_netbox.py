@@ -68,7 +68,8 @@ def threadedPingReverseSave(addr):
     dnsreq = '.'.join(reversed(ip.split("."))) + ".in-addr.arpa"
     #If the ping failed...
     if rtt == None:
-        print(ip + ": NO RESPONSE BEFORE ICMP TIMEOUT EXPIRY")
+        if __debug__:
+            print(ip + ": NO RESPONSE BEFORE ICMP TIMEOUT EXPIRY")
         #There's not a great answer here, so we're going to assume the IP is merely reserved
         #Feel free to adjust this to your needs
         addr['status']=2
@@ -107,7 +108,8 @@ def threadedPingReverseSave(addr):
             #If there is no reply, set the description variable to...
             desc = "No reverse.."
             #raise
-        print(ip + ": " + str(rtt) + "s and reverse: " + desc)
+        if __debug__:
+            print(ip + ": " + str(rtt) + "s and reverse: " + desc)
         #Remove the right-most period (DNS resolver returns one, e.g. example.com.)
         addr['description'] = desc.rstrip('.')
         #Always save successful pings
@@ -116,12 +118,15 @@ def threadedPingReverseSave(addr):
     return result
 
 def saveAddr(addr):
-    print("entered saveAddr for " + addr['address'])
+    if __debug__:
+        print("entered saveAddr for " + addr['address'])
     if addr['isNew'] == "new":
         addr.pop('isNew', None)
         post = requests.post(ip_addresses_url, headers=header, json=addr)
-        print(post.status_code)
-        print(post.json())
+        if __debug__:
+            print(post.status_code)
+        if __debug__:
+            print(post.json())
     elif addr['isNew'] == "old":
         addr.pop('isNew', None)
         try:
@@ -130,19 +135,25 @@ def saveAddr(addr):
             addr['role'] = role
         except:
             #Do nothing
-            print("Role exception.")
+            if __debug__:
+                print("Role exception.")
         post = requests.put(ip_addresses_url + str(addr['id']) + "/", headers=header, json=addr)
-        print(post.status_code)
-        print(post.json())
+        if __debug__:
+            print(post.status_code)
+        if __debug__:
+            print(post.json())
     return addr
 
 def mergeWithExisting(addr, listOfIps):
     for ip_addr in listOfIps:
-        print("IP to match: " + addr['address'] + " and checking against IP: " + ip_addr['address'])
+        if __debug__:
+            print("IP to match: " + addr['address'] + " and checking against IP: " + ip_addr['address'])
         if ip_addr['address'] == addr['address']:
-            print("MATCH: " + json.dumps(ip_addr, indent=4))
+            if __debug__:
+                print("MATCH: " + json.dumps(ip_addr, indent=4))
             #Get 'id' from existing and stuff it in addr
-            print(ip_addr['id'])
+            if __debug__:
+                print(ip_addr['id'])
             addr['id'] = ip_addr['id']
             addr['isNew'] = "old"
     return addr
@@ -151,7 +162,8 @@ if __name__ == '__main__':
     start = datetime.datetime.now()
     if load_scanner_from_rfc1918_or_netbox == 1:
         #Load from RFC1918
-        print("Not currently loading addresses from RFC1918, even though I was told to!!")
+        if __debug__:
+            print("Not currently loading addresses from RFC1918, even though I was told to!!")
     if load_scanner_from_rfc1918_or_netbox == 2:
         #GET IP addresses from Netbox
         response = requests.get(ip_addresses_url, headers = header)
@@ -162,7 +174,8 @@ if __name__ == '__main__':
                 listOfIpsWithMask.append(ip)
         for ipaddr in listOfIpsWithMask:
             ipaddr['isNew'] = "old"
-        print("Populated from list of existing IP addresses. No new ones will be scanned.")
+        if __debug__:
+            print("Populated from list of existing IP addresses. No new ones will be scanned.")
     if load_scanner_from_rfc1918_or_netbox == 3:
         #GET IP prefixes from Netbox
         response = requests.get(ip_prefixes_url, headers = header)
@@ -171,69 +184,87 @@ if __name__ == '__main__':
             response = requests.get(ip_prefixes_url, headers = header)
             for prefix in response.json()['results']:
                 listOfPrefixes.append(prefix)
-        print(json.dumps(listOfPrefixes, indent=4))
+        if __debug__:
+            print(json.dumps(listOfPrefixes, indent=4))
         listOfIps = []
         for prefixObj in listOfPrefixes:
-            print(prefixObj['prefix'])
+            if __debug__:
+                print(prefixObj['prefix'])
             #print(ipaddress.ip_network(prefixObj['prefix']).hosts())
             mask = prefixObj['prefix'].split("/")[1]
             for host in ipaddress.ip_network(prefixObj['prefix']).hosts():
                 listOfIps.append({"address": str(host) + "/" + mask})
         listOfIpsWithMask = listOfIps
-        print("List of IP's with mask: ")
-        print(listOfIpsWithMask)
-        print("List of existing IP addresses: ")
+        if __debug__:
+            print("List of IP's with mask: ")
+        if __debug__:
+            print(listOfIpsWithMask)
+        if __debug__:
+            print("List of existing IP addresses: ")
         ip_result = requests.get(ip_addresses_url, headers = header)
         listOfIps = ip_result.json()['results']
         while ip_result.json()['next'] is not None:
             ip_result = requests.get(ip_result.json()['next'], headers = header)
             for ip in ip_result.json()['results']:
                 listOfIps.append(ip)
-        print(json.dumps(listOfIps, indent=4))
+        if __debug__:
+            print(json.dumps(listOfIps, indent=4))
         for ipaddr in listOfIpsWithMask:
             ipaddr['isNew'] = "new"
             ipaddr = mergeWithExisting(ipaddr, listOfIps)
-            print(json.dumps(ipaddr, indent=4))
+            if __debug__:
+                print(json.dumps(ipaddr, indent=4))
 
     if load_scanner_from_rfc1918_or_netbox == 4:
         lisOfPrefixes = [{'prefix': s} for s in global_subnets]
-        print(json.dumps(listOfPrefixes, indent=4))
+        if __debug__:
+            print(json.dumps(listOfPrefixes, indent=4))
         listOfIps = []
         for prefixObj in listOfPrefixes:
-            print(prefixObj['prefix'])
+            if __debug__:
+                print(prefixObj['prefix'])
             #print(ipaddress.ip_network(prefixObj['prefix']).hosts())
             mask = prefixObj['prefix'].split("/")[1]
             for host in ipaddress.ip_network(prefixObj['prefix']).hosts():
                 listOfIps.append({"address": str(host) + "/" + mask})
         listOfIpsWithMask = listOfIps
-        print("List of IP's with mask: ")
-        print(listOfIpsWithMask)
-        print("List of existing IP addresses: ")
+        if __debug__:
+            print("List of IP's with mask: ")
+        if __debug__:
+            print(listOfIpsWithMask)
+        if __debug__:
+            print("List of existing IP addresses: ")
         ip_result = requests.get(ip_addresses_url, headers = header)
         listOfIps = ip_result.json()['results']
         while ip_result.json()['next'] is not None:
             ip_result = requests.get(ip_result.json()['next'], headers = header)
             for ip in ip_result.json()['results']:
                 listOfIps.append(ip)
-        print(json.dumps(listOfIps, indent=4))
+        if __debug__:
+            print(json.dumps(listOfIps, indent=4))
         for ipaddr in listOfIpsWithMask:
             ipaddr['isNew'] = "new"
             ipaddr = mergeWithExisting(ipaddr, listOfIps)
-            print(json.dumps(ipaddr, indent=4))
+            if __debug__:
+                print(json.dumps(ipaddr, indent=4))
 
 #        print "Stopping..." + None
     #Pretty print new copy for debugging
-    print(json.dumps(listOfIpsWithMask, indent=4))
+    if __debug__:
+        print(json.dumps(listOfIpsWithMask, indent=4))
     #Multithread the process. This isn't to speed up "processing" but eliminate the 
     #wait on timeout expiry; adjust to speed up/slow down system.    
     pool = Pool(processes=numProcesses)
     #Here, we call isPingable for every entity in listOfIpsWithMask
     result = pool.map(threadedPingReverseSave, listOfIpsWithMask)
 #Presently looking at solutions that can sort this mess by IP address... currently results are unsorted.
-    print(result)
-    print(json.dumps(result, indent=4))
+    if __debug__:
+        print(result)
+    if __debug__:
+        print(json.dumps(result, indent=4))
 #    r = requests.post(ip_addresses_url, headers=header, json={"address": "192.168.3.2", "status": "1"})
 #    print r.status_code
 #    print r.json()
     finish = datetime.datetime.now()
-    print("Completed in: " + str(finish - start))
+    if __debug__:
+        print("Completed in: " + str(finish - start))
