@@ -31,7 +31,7 @@ header={"Authorization": "Token 0123456789abcdef0123456789abcdef01234567"}
 load_scanner_from_rfc1918_or_netbox = 4
 
 # global_subnets is subnets options in case of 4
-global_subnets = ['10.0.0.0/8']
+global_subnets = [u'10.0.0.0/21']
 
 #OK, don't touch this line
 myResolver = dns.resolver.Resolver()
