@@ -216,7 +216,7 @@ if __name__ == '__main__':
                 print(json.dumps(ipaddr, indent=4))
 
     if load_scanner_from_rfc1918_or_netbox == 4:
-        lisOfPrefixes = [{'prefix': s} for s in global_subnets]
+        listOfPrefixes = [{'prefix': s} for s in global_subnets]
         if __debug__:
             print(json.dumps(listOfPrefixes, indent=4))
         listOfIps = []
