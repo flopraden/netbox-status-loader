@@ -8,6 +8,13 @@ import json, requests, ipaddress, dns.resolver, datetime
 import ping
 from multiprocessing import Pool
 
+session = requests.Session()
+
+# FOR DEBUG
+#import requests_mock
+#adapter = requests_mock.Adapter()
+#session.mount('http://', adapter)
+#adapter.register_uri(requests_mock.ANY, requests_mock.ANY, text='{"results": [], "next": null}')
 #############################################################################
 #DEAR USER - YOU MUST DEFINE EVERYTHING FROM HERE ###########################
 #############################################################################
@@ -122,7 +129,7 @@ def saveAddr(addr):
         print("entered saveAddr for " + addr['address'])
     if addr['isNew'] == "new":
         addr.pop('isNew', None)
-        post = requests.post(ip_addresses_url, headers=header, json=addr)
+        post = session.post(ip_addresses_url, headers=header, json=addr)
         if __debug__:
             print(post.status_code)
         if __debug__:
@@ -137,7 +144,7 @@ def saveAddr(addr):
             #Do nothing
             if __debug__:
                 print("Role exception.")
-        post = requests.put(ip_addresses_url + str(addr['id']) + "/", headers=header, json=addr)
+        post = session.put(ip_addresses_url + str(addr['id']) + "/", headers=header, json=addr)
         if __debug__:
             print(post.status_code)
         if __debug__:
@@ -166,10 +173,10 @@ if __name__ == '__main__':
             print("Not currently loading addresses from RFC1918, even though I was told to!!")
     if load_scanner_from_rfc1918_or_netbox == 2:
         #GET IP addresses from Netbox
-        response = requests.get(ip_addresses_url, headers = header)
+        response = session.get(ip_addresses_url, headers = header)
         listOfIpsWithMask = response.json()['results']
         while response.json()['next'] is not None:
-            response = requests.get(response.json()['next'], headers = header)
+            response = session.get(response.json()['next'], headers = header)
             for ip in response.json()['results']:
                 listOfIpsWithMask.append(ip)
         for ipaddr in listOfIpsWithMask:
@@ -178,10 +185,10 @@ if __name__ == '__main__':
             print("Populated from list of existing IP addresses. No new ones will be scanned.")
     if load_scanner_from_rfc1918_or_netbox == 3:
         #GET IP prefixes from Netbox
-        response = requests.get(ip_prefixes_url, headers = header)
+        response = session.get(ip_prefixes_url, headers = header)
         listOfPrefixes = response.json()['results']
         while response.json()['next'] is not None:
-            response = requests.get(ip_prefixes_url, headers = header)
+            response = session.get(ip_prefixes_url, headers = header)
             for prefix in response.json()['results']:
                 listOfPrefixes.append(prefix)
         if __debug__:
@@ -201,10 +208,10 @@ if __name__ == '__main__':
             print(listOfIpsWithMask)
         if __debug__:
             print("List of existing IP addresses: ")
-        ip_result = requests.get(ip_addresses_url, headers = header)
+        ip_result = session.get(ip_addresses_url, headers = header)
         listOfIps = ip_result.json()['results']
         while ip_result.json()['next'] is not None:
-            ip_result = requests.get(ip_result.json()['next'], headers = header)
+            ip_result = session.get(ip_result.json()['next'], headers = header)
             for ip in ip_result.json()['results']:
                 listOfIps.append(ip)
         if __debug__:
@@ -234,10 +241,10 @@ if __name__ == '__main__':
             print(listOfIpsWithMask)
         if __debug__:
             print("List of existing IP addresses: ")
-        ip_result = requests.get(ip_addresses_url, headers = header)
+        ip_result = session.get(ip_addresses_url, headers = header)
         listOfIps = ip_result.json()['results']
         while ip_result.json()['next'] is not None:
-            ip_result = requests.get(ip_result.json()['next'], headers = header)
+            ip_result = session.get(ip_result.json()['next'], headers = header)
             for ip in ip_result.json()['results']:
                 listOfIps.append(ip)
         if __debug__:
@@ -262,7 +269,7 @@ if __name__ == '__main__':
         print(result)
     if __debug__:
         print(json.dumps(result, indent=4))
-#    r = requests.post(ip_addresses_url, headers=header, json={"address": "192.168.3.2", "status": "1"})
+#    r = session.post(ip_addresses_url, headers=header, json={"address": "192.168.3.2", "status": "1"})
 #    print r.status_code
 #    print r.json()
     finish = datetime.datetime.now()
